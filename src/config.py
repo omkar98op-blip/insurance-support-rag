@@ -20,8 +20,13 @@ class Settings:
     embedding_model: str = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
 
     top_k: int = int(os.getenv("TOP_K", 4))
-    # Cosine distance ceiling. Above this the passage is treated as not relevant,
-    # which is what makes "I don't know" reachable instead of always answering.
+    # Relevance ceiling on the retrieval score. FAISS IndexFlatL2 returns SQUARED
+    # L2 distance; the embeddings are L2-normalised, so squared_l2 = 2 - 2*cos_sim
+    # and the score ranges 0..4. The 1.05 default is therefore a cosine-similarity
+    # floor of 1 - 1.05/2 = 0.475. Above the ceiling a passage is treated as not
+    # relevant, which is what makes "I don't know" reachable instead of always
+    # answering. Tuned on the eval suite: 0.8 caused false refusals on paraphrased
+    # questions, 1.4 let unrelated articles through.
     max_distance: float = float(os.getenv("MAX_DISTANCE", 1.05))
 
     # Generation backend: "anthropic", "openai", or "extractive" (no API key needed).

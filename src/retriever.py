@@ -1,4 +1,8 @@
-"""Retrieval over the FAISS index, with a distance floor so irrelevant hits are dropped."""
+"""Retrieval over the FAISS index, with a relevance ceiling so irrelevant hits are dropped.
+
+Scores are squared L2 distance from FAISS IndexFlatL2 over L2-normalised
+embeddings, so lower is closer and squared_l2 = 2 - 2 * cosine_similarity.
+"""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -16,7 +20,10 @@ class Passage:
     article_id: str
     title: str
     chunk_id: str
-    distance: float
+    distance: float  # squared L2; cosine_similarity == 1 - distance / 2
+
+    def cosine_similarity(self) -> float:
+        return 1 - self.distance / 2
 
     def citation(self) -> str:
         return f"[{self.article_id}] {self.title}"
